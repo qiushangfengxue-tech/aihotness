@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/admin.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+</head>
+<body>
+    <canvas id="particles"></canvas>
+
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="/" class="nav-logo">
+                <span class="logo-icon">✦</span>
+                <span class="logo-text">AIHOTNESS</span>
+                <span class="logo-badge">BETA</span>
+            </a>
+            <div class="nav-links">
+                <a href="/" class="nav-link"><span class="nav-icon">🔥</span> 首页</a>
+            </div>
+            <div class="nav-right">
+                <div class="auth-section">
+                    <div id="userMenu" class="user-menu">
+                        <div class="user-dropdown">
+                            <button class="user-dropdown-trigger">
+                                <span id="userDisplayName">用户</span>
+                                <span class="dropdown-arrow">▾</span>
+                            </button>
+                            <div class="dropdown-menu">
+                                <a href="/profile">个人资料</a>
+                                <a href="/" class="active">返回首页</a>
+                                <div class="dropdown-divider"></div>
+                                <a href="#" id="logoutBtn">退出登录</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="admin-main">
+        <div class="container">
+            <!-- Admin Nav -->
+            <nav class="admin-nav">
+                <h1 class="admin-title">管理后台</h1>
+                <div class="admin-tabs">
+                    <a href="/admin" class="admin-tab active" data-section="dashboard">📊 概览</a>
+                    <a href="/admin/articles" class="admin-tab" data-section="articles">📄 文章管理</a>
+                    <a href="/admin/comments" class="admin-tab" data-section="comments">💬 评论审核</a>
+                </div>
+            </nav>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="stat-card-icon">📄</div>
+                    <div class="stat-card-body">
+                        <span class="stat-card-value" id="statTotalArticles">--</span>
+                        <span class="stat-card-label">文章总数</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-icon">👥</div>
+                    <div class="stat-card-body">
+                        <span class="stat-card-value" id="statTotalUsers">--</span>
+                        <span class="stat-card-label">注册用户</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-icon">💬</div>
+                    <div class="stat-card-body">
+                        <span class="stat-card-value" id="statTotalComments">--</span>
+                        <span class="stat-card-label">评论总数</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-icon">❤️</div>
+                    <div class="stat-card-body">
+                        <span class="stat-card-value" id="statTotalLikes">--</span>
+                        <span class="stat-card-label">点赞总数</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-icon">📅</div>
+                    <div class="stat-card-body">
+                        <span class="stat-card-value" id="statToday">--</span>
+                        <span class="stat-card-label">今日新增</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-icon">🔄</div>
+                    <div class="stat-card-body">
+                        <span class="stat-card-value" id="statRewritten">--</span>
+                        <span class="stat-card-label">AI 改写</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-icon">✏️</div>
+                    <div class="stat-card-body">
+                        <span class="stat-card-value" id="statOriginal">--</span>
+                        <span class="stat-card-label">原创文章</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-icon">📈</div>
+                    <div class="stat-card-body">
+                        <span class="stat-card-value" id="statRecent7d">--</span>
+                        <span class="stat-card-label">7日新增</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Sources -->
+            <section class="admin-section">
+                <h2 class="admin-section-title">📡 热门信息来源 Top 5</h2>
+                <div class="sources-list" id="topSources">
+                    <div class="loading-state small"><div class="spinner"></div></div>
+                </div>
+            </section>
+
+            <!-- Quick Actions -->
+            <section class="admin-section">
+                <h2 class="admin-section-title">⚡ 快捷操作</h2>
+                <div class="quick-actions">
+                    <button class="btn btn-primary" onclick="triggerCollection()">⟳ 立即采集</button>
+                    <a href="/editor" class="btn btn-outline">✏️ 写文章</a>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <div class="toast" id="toast"></div>
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/admin.js"></script>
+</body>
+</html>

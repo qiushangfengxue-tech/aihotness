@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <meta name="description" content="{{ description }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+    <style>
+        .profile-container { max-width: 900px; margin: 40px auto; padding: 0 20px; }
+        .profile-header { display: flex; align-items: center; gap: 24px; padding: 32px; background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border-color); margin-bottom: 32px; }
+        .profile-avatar { width: 72px; height: 72px; border-radius: 50%; background: var(--gradient-main); display: flex; align-items: center; justify-content: center; font-size: 28px; color: #fff; flex-shrink: 0; }
+        .profile-info h1 { font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+        .profile-info p { font-size: 14px; color: var(--text-secondary); }
+        .profile-role { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-top: 6px; background: var(--gradient-purple); color: #fff; }
+        .profile-actions { margin-left: auto; display: flex; gap: 12px; }
+        .my-articles-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .my-articles-header h2 { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+        .my-articles-list { display: flex; flex-direction: column; gap: 12px; }
+        .my-article-card { display: flex; align-items: center; gap: 16px; padding: 16px 20px; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); transition: all 0.2s; }
+        .my-article-card:hover { border-color: var(--border-hover); }
+        .my-article-info { flex: 1; min-width: 0; }
+        .my-article-title { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .my-article-meta { font-size: 13px; color: var(--text-muted); display: flex; gap: 12px; align-items: center; }
+        .my-article-actions { display: flex; gap: 8px; flex-shrink: 0; }
+        .my-article-actions a, .my-article-actions button { padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+        .btn-edit { background: var(--accent-blue); color: #fff; border: none; }
+        .btn-edit:hover { opacity: 0.85; }
+        .btn-delete-article { background: transparent; color: var(--color-s); border: 1px solid var(--color-s); }
+        .btn-delete-article:hover { background: var(--color-s); color: #fff; }
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+        .empty-state p { font-size: 15px; margin-bottom: 16px; }
+        .empty-state .btn { display: inline-flex; }
+        #profileLoading { text-align: center; padding: 40px; color: var(--text-muted); }
+        .toast-msg { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); padding: 10px 24px; border-radius: 10px; background: var(--bg-elevated); color: var(--text-primary); border: 1px solid var(--border-color); z-index: 999; display: none; font-size: 14px; }
+        .toast-msg.show { display: block; }
+        .toast-msg.success { border-color: #22c55e; }
+        .toast-msg.error { border-color: #ef4444; }
+        @media (max-width: 640px) {
+            .profile-header { flex-direction: column; text-align: center; }
+            .profile-actions { margin-left: 0; margin-top: 12px; }
+            .my-article-card { flex-direction: column; align-items: flex-start; }
+            .my-article-actions { align-self: flex-end; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particles"></canvas>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="/" class="nav-logo">
+                <span class="logo-icon">✦</span>
+                <span class="logo-text">AIHOTNESS</span>
+                <span class="logo-badge">BETA</span>
+            </a>
+            <div class="nav-links">
+                <a href="/" class="nav-link" data-section="news"><span class="nav-icon">🔥</span> 热点新闻</a>
+                <a href="/papers" class="nav-link" data-section="papers"><span class="nav-icon">📄</span> 论文</a>
+                <a href="/tutorials" class="nav-link" data-section="tutorials"><span class="nav-icon">📚</span> AI教程</a>
+            </div>
+            <div class="nav-right">
+                <a href="/editor" class="btn btn-sm btn-primary nav-write-btn">✏️ 写文章</a>
+                <button id="themeToggle" class="theme-toggle" aria-label="切换主题">
+                    <span class="theme-icon">☀️</span>
+                </button>
+                <div class="auth-section">
+                    <div id="guestLinks" class="auth-section">
+                        <a href="/login" class="nav-link auth-link">登录</a>
+                        <a href="/register" class="nav-link auth-link auth-register">注册</a>
+                    </div>
+                    <div id="userMenu" class="user-menu" style="display:none;">
+                        <div class="user-dropdown">
+                            <button class="user-dropdown-trigger">
+                                <span id="userDisplayName">用户</span>
+                                <span class="dropdown-arrow">▾</span>
+                            </button>
+                            <div class="dropdown-menu">
+                                <a href="/profile">我的文章</a>
+                                <a href="/admin" id="adminLink" style="display:none;">管理后台</a>
+                                <div class="dropdown-divider"></div>
+                                <a href="#" id="logoutBtn">退出登录</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="profile-container">
+            <!-- Profile Header -->
+            <div id="profileLoading"><div class="spinner"></div><p>加载中...</p></div>
+
+            <div id="profileContent" style="display:none;">
+                <div class="profile-header">
+                    <div class="profile-avatar" id="avatarIcon">👤</div>
+                    <div class="profile-info">
+                        <h1 id="userDisplayNameHeader">—</h1>
+                        <p id="userBio"></p>
+                        <span class="profile-role" id="userRole">用户</span>
+                    </div>
+                    <div class="profile-actions">
+                        <a href="/editor" class="btn btn-primary">✏️ 写新文章</a>
+                    </div>
+                </div>
+
+                <!-- My Articles -->
+                <div class="my-articles-header">
+                    <h2>📝 我的文章</h2>
+                    <span id="articleCount" style="font-size:14px;color:var(--text-muted)"></span>
+                </div>
+                <div class="my-articles-list" id="myArticlesList">
+                    <div class="loading-state small"><div class="spinner"></div></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-container">
+            <div class="footer-brand">
+                <span class="footer-logo">✦ AIHOTNESS</span>
+                <p class="footer-desc">AI 热点资讯聚合平台</p>
+            </div>
+            <div class="footer-links">
+                <span class="footer-tag"># AIHOTNESS</span>
+                <span class="footer-tag">Built with DeepSeek</span>
+            </div>
+        </div>
+    </footer>
+
+    <div class="toast-msg" id="toastMsg"></div>
+
+    <script src="/static/js/main.js"></script>
+    <script>
+    async function loadMyArticles() {
+        try {
+            const resp = await fetch('/api/user/articles', {
+                headers: { 'Content-Type': 'application/json', ...(localStorage.getItem('token') ? { 'Authorization': 'Bearer ' + localStorage.getItem('token') } : {}) }
+            });
+            if (!resp.ok) throw new Error('Failed to load');
+            const data = await resp.json();
+            const list = document.getElementById('myArticlesList');
+            const countEl = document.getElementById('articleCount');
+
+            if (!data.articles || data.articles.length === 0) {
+                list.innerHTML = '<div class="empty-state"><p>还没有发布过文章</p><a href="/editor" class="btn btn-primary">✏️ 写第一篇文章</a></div>';
+                if (countEl) countEl.textContent = '0 篇';
+                return;
+            }
+
+            if (countEl) countEl.textContent = data.articles.length + ' 篇';
+
+            list.innerHTML = data.articles.map(a => {
+                const linkUrl = a.content_html ? '/article/' + a.id : a.url;
+                const importance = a.importance || 'C';
+                const date = a.published_at ? a.published_at.slice(0, 10) : '未知';
+                const category = a.category || '未分类';
+                return '<div class="my-article-card">' +
+                    '<span class="importance-badge ' + importance.toLowerCase() + '">' + importance + '</span>' +
+                    '<div class="my-article-info">' +
+                        '<div class="my-article-title">' + escapeHtml(a.title) + '</div>' +
+                        '<div class="my-article-meta">' +
+                            '<span>' + escapeHtml(category) + '</span>' +
+                            '<span>' + date + '</span>' +
+                            (a.like_count ? '<span>❤️ ' + a.like_count + '</span>' : '') +
+                            (a.comment_count ? '<span>💬 ' + a.comment_count + '</span>' : '') +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="my-article-actions">' +
+                        '<a href="/editor/' + a.id + '" class="btn-edit">编辑</a>' +
+                        '<button class="btn-delete-article" onclick="deleteArticle(\'' + a.id + '\', this)">删除</button>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        } catch (e) {
+            document.getElementById('myArticlesList').innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+        }
+    }
+
+    async function deleteArticle(articleId, btn) {
+        if (!confirm('确定要删除这篇文章吗？此操作不可撤销。')) return;
+        btn.disabled = true;
+        btn.textContent = '删除中...';
+        try {
+            const resp = await fetch('/api/content/' + articleId, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+            });
+            if (resp.ok) {
+                showToastMsg('文章已删除', 'success');
+                loadMyArticles();
+            } else {
+                const data = await resp.json();
+                showToastMsg(data.detail || '删除失败', 'error');
+                btn.disabled = false;
+                btn.textContent = '删除';
+            }
+        } catch (e) {
+            showToastMsg('网络错误', 'error');
+            btn.disabled = false;
+            btn.textContent = '删除';
+        }
+    }
+
+    function showToastMsg(msg, type) {
+        const el = document.getElementById('toastMsg');
+        el.textContent = msg;
+        el.className = 'toast-msg show ' + type;
+        clearTimeout(el._timer);
+        el._timer = setTimeout(() => el.classList.remove('show'), 3000);
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        var d = document.createElement('div');
+        d.textContent = text;
+        return d.innerHTML;
+    }
+
+    // Wait for auth and init
+    function initProfile() {
+        if (!state.user) {
+            showToastMsg('请先登录', 'error');
+            setTimeout(function() { window.location.href = '/login'; }, 1500);
+            return;
+        }
+
+        document.getElementById('profileLoading').style.display = 'none';
+        document.getElementById('profileContent').style.display = 'block';
+        document.getElementById('userDisplayNameHeader').textContent = state.user.display_name || state.user.username;
+        document.getElementById('userBio').textContent = state.user.bio || '';
+        document.getElementById('userRole').textContent = state.user.role === 'admin' ? '管理员' : '用户';
+        loadMyArticles();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            var checks = 0;
+            var check = function() {
+                if (state._authChecked) { initProfile(); return; }
+                checks++;
+                if (checks > 30) { initProfile(); return; }
+                setTimeout(check, 100);
+            };
+            setTimeout(check, 200);
+        });
+    } else {
+        setTimeout(function() {
+            if (state._authChecked) initProfile();
+            else setTimeout(arguments.callee, 100);
+        }, 200);
+    }
+    </script>
+</body>
+</html>

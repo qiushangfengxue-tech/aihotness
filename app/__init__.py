@@ -1,0 +1,1 @@
+# AIHOTNESS - AI News Aggregator

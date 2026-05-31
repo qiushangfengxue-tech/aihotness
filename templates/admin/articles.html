@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/admin.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+</head>
+<body>
+    <canvas id="particles"></canvas>
+
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="/" class="nav-logo">
+                <span class="logo-icon">✦</span>
+                <span class="logo-text">AIHOTNESS</span>
+                <span class="logo-badge">BETA</span>
+            </a>
+            <div class="nav-links">
+                <a href="/" class="nav-link"><span class="nav-icon">🔥</span> 首页</a>
+            </div>
+            <div class="nav-right">
+                <div id="userMenu" class="user-menu">
+                    <div class="user-dropdown">
+                        <button class="user-dropdown-trigger">
+                            <span id="userDisplayName">用户</span>
+                            <span class="dropdown-arrow">▾</span>
+                        </button>
+                        <div class="dropdown-menu">
+                            <a href="/profile">个人资料</a>
+                            <a href="/admin">管理后台</a>
+                            <a href="/">返回首页</a>
+                            <div class="dropdown-divider"></div>
+                            <a href="#" id="logoutBtn">退出登录</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="admin-main">
+        <div class="container">
+            <nav class="admin-nav">
+                <h1 class="admin-title">文章管理</h1>
+                <div class="admin-tabs">
+                    <a href="/admin" class="admin-tab" data-section="dashboard">📊 概览</a>
+                    <a href="/admin/articles" class="admin-tab active" data-section="articles">📄 文章管理</a>
+                    <a href="/admin/comments" class="admin-tab" data-section="comments">💬 评论审核</a>
+                </div>
+            </nav>
+
+            <div class="admin-toolbar">
+                <span class="admin-toolbar-info" id="articlesTotal">共 0 篇文章</span>
+                <div class="admin-toolbar-actions">
+                    <input type="text" class="admin-search" id="articleSearch" placeholder="搜索标题..." oninput="filterArticles()">
+                </div>
+            </div>
+
+            <div class="admin-table-wrapper">
+                <table class="admin-table" id="articlesTable">
+                    <thead>
+                        <tr>
+                            <th>标题</th>
+                            <th>来源</th>
+                            <th>类型</th>
+                            <th>分级</th>
+                            <th>分类</th>
+                            <th>互动</th>
+                            <th>时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="articlesBody">
+                        <tr><td colspan="8"><div class="loading-state small"><div class="spinner"></div></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="admin-pagination" id="articlesPagination">
+                <button class="btn btn-outline" onclick="loadArticles(0)">⟳ 刷新</button>
+            </div>
+        </div>
+    </main>
+
+    <div class="toast" id="toast"></div>
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/admin.js"></script>
+</body>
+</html>

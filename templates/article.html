@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ article.title }} — {{ title }}</title>
+    <meta name="description" content="{{ article.summary or '' }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/article.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+</head>
+<body>
+    <canvas id="particles"></canvas>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="/" class="nav-logo">
+                <span class="logo-icon">✦</span>
+                <span class="logo-text">AIHOTNESS</span>
+                <span class="logo-badge">BETA</span>
+            </a>
+            <div class="nav-links">
+                <a href="/" class="nav-link"><span class="nav-icon">🔥</span> 热点新闻</a>
+                <a href="/papers" class="nav-link"><span class="nav-icon">📄</span> 论文</a>
+                <a href="/tutorials" class="nav-link"><span class="nav-icon">📚</span> AI教程</a>
+            </div>
+            <div class="nav-right">
+                <a href="/editor" class="btn btn-sm btn-primary nav-write-btn">✏️ 写文章</a>
+                <button id="themeToggle" class="theme-toggle" aria-label="切换主题">
+                    <span class="theme-icon">☀️</span>
+                </button>
+                <div class="auth-section">
+                    <div id="guestLinks" class="auth-section">
+                        <a href="/login" class="nav-link auth-link">登录</a>
+                        <a href="/register" class="nav-link auth-link auth-register">注册</a>
+                    </div>
+                    <div id="userMenu" class="user-menu" style="display:none;">
+                        <div class="user-dropdown">
+                            <button class="user-dropdown-trigger">
+                                <span id="userDisplayName">用户</span>
+                                <span class="dropdown-arrow">▾</span>
+                            </button>
+                            <div class="dropdown-menu">
+                                <a href="/profile">我的文章</a>
+                                <a href="/admin" id="adminLink" style="display:none;">管理后台</a>
+                                <div class="dropdown-divider"></div>
+                                <a href="#" id="logoutBtn">退出登录</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <span id="navStatus" class="nav-status">
+                    <span class="status-dot"></span>
+                    {{ "LLM Active" if llm_enabled else "Cold Mode" }}
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Article Content -->
+    <main class="article-main">
+        <div class="container article-container">
+
+            <!-- Breadcrumb -->
+            <nav class="breadcrumb">
+                <a href="/">首页</a>
+                <span class="breadcrumb-sep">›</span>
+                <a href="/">{{ article.category or '未分类' }}</a>
+                <span class="breadcrumb-sep">›</span>
+                <span class="breadcrumb-current">{{ article.title[:40] }}...</span>
+            </nav>
+
+            <!-- Article Header -->
+            <article class="article-detail">
+                <header class="article-header">
+                    <div class="article-meta-top">
+                        <span class="importance-badge {{ (article.importance or 'c').lower() }}">{{ article.importance or 'C' }}</span>
+                        <span class="article-category">{{ article.category or '未分类' }}</span>
+                        <span class="article-source">来源：{{ article.source_name }}</span>
+                    </div>
+                    <h1 class="article-title">{{ article.title }}</h1>
+                    <div class="article-byline">
+                        {% if article.author %}
+                        <span class="article-author">✍️ {{ article.author }}</span>
+                        {% endif %}
+                        <span class="article-date">📅 {{ article.published_at[:10] if article.published_at else '未知' }}</span>
+                        {% if article.article_type == 'rewrite' %}
+                        <span class="article-badge badge-rewrite">AI 改写</span>
+                        {% elif article.article_type == 'original' %}
+                        <span class="article-badge badge-original">原创</span>
+                        {% endif %}
+                    </div>
+                </header>
+
+                <!-- Article Body -->
+                <div class="article-body">
+                    {% if article.content_html %}
+                        {{ article.content_html | safe }}
+                    {% elif article.content_md %}
+                        <pre class="article-md-raw">{{ article.content_md }}</pre>
+                    {% else %}
+                        {% if article.summary %}
+                        <div class="article-summary">
+                            <h2>摘要</h2>
+                            <p>{{ article.summary }}</p>
+                        </div>
+                        {% endif %}
+                        {% if article.content %}
+                        <div class="article-preview">
+                            <p>{{ article.content[:1000] }}</p>
+                            {% if article.content|length > 1000 %}
+                            <p class="article-preview-more">...</p>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        <div class="article-external-notice">
+                            <p>📡 本文为外部来源，暂未完成站内改写</p>
+                            <div class="notice-actions">
+                                <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                                    查看原文 ↗
+                                </a>
+                                {% if llm_enabled %}
+                                <button class="btn btn-outline" onclick="triggerRewrite('{{ article.id }}', this)">
+                                    🤖 AI 改写
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Tags -->
+                {% if article.tags %}
+                <div class="article-tags">
+                    {% for tag in article.tags %}
+                    <span class="card-tag">{{ tag }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Actions: Like + Source Link -->
+                <div class="article-actions">
+                    <button class="btn btn-like" id="likeBtn" data-article-id="{{ article.id }}">
+                        <span class="like-icon">❤</span>
+                        <span id="likeCount">{{ article.like_count or 0 }}</span>
+                    </button>
+                    <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-source-link">
+                        查看原文 ↗
+                    </a>
+                </div>
+
+                <!-- Comments Section -->
+                <section class="comments-section" id="commentsSection">
+                    <h2 class="comments-title">💬 评论 <span class="comment-count" id="commentCount">{{ article.comment_count or 0 }}</span></h2>
+
+                    <!-- Comment Form (shown when logged in) -->
+                    <div class="comment-form" id="commentForm" style="display:none;">
+                        <textarea class="comment-textarea" id="commentInput" placeholder="写下你的评论..." rows="3" maxlength="2000"></textarea>
+                        <div class="comment-form-actions">
+                            <span class="comment-form-hint">按 Enter 发送，Shift+Enter 换行</span>
+                            <button class="btn btn-primary btn-comment-submit" onclick="submitComment()">发表评论</button>
+                        </div>
+                    </div>
+                    <!-- Login prompt (shown when not logged in) -->
+                    <div class="comment-login-prompt" id="commentLoginPrompt">
+                        <a href="/login" class="nav-link">登录</a> 后可以发表评论
+                    </div>
+
+                    <!-- Comments List -->
+                    <div id="commentsArea">
+                        <div class="comments-placeholder" id="commentsLoading">
+                            <div class="spinner"></div>
+                            <p>加载评论...</p>
+                        </div>
+                    </div>
+                </section>
+
+            </article>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-container">
+            <div class="footer-brand">
+                <span class="footer-logo">✦ AIHOTNESS</span>
+                <p class="footer-desc">AI 热点资讯聚合平台 — 追踪全球 AI 前沿动态</p>
+            </div>
+            <div class="footer-links">
+                <span class="footer-tag"># AIHOTNESS</span>
+                <span class="footer-tag"># 每日AI资讯</span>
+                <span class="footer-tag">Built with DeepSeek</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/article.js"></script>
+</body>
+</html>

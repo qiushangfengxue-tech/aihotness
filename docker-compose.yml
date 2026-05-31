@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  aihotness:
+    build: .
+    container_name: aihotness
+    ports:
+      - "8000:8000"
+    volumes:
+      - aihotness_data:/app/data
+    env_file:
+      - .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import http.client; conn = http.client.HTTPConnection('localhost:8000'); conn.request('GET', '/api/status'); resp = conn.getresponse(); exit(0 if resp.status == 200 else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  aihotness_data:

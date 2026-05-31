@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} — 写文章</title>
+    <meta name="description" content="Markdown 文章编辑器">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/editor.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+</head>
+<body>
+    <canvas id="particles"></canvas>
+
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="/" class="nav-logo">
+                <span class="logo-icon">✦</span>
+                <span class="logo-text">AIHOTNESS</span>
+                <span class="logo-badge">BETA</span>
+            </a>
+            <div class="nav-links">
+                <a href="/" class="nav-link"><span class="nav-icon">🔥</span> 热点新闻</a>
+                <a href="/papers" class="nav-link"><span class="nav-icon">📄</span> 论文</a>
+                <a href="/tutorials" class="nav-link"><span class="nav-icon">📚</span> AI教程</a>
+            </div>
+            <div class="nav-right">
+                <a href="/editor" class="btn btn-sm btn-primary nav-write-btn">✏️ 写文章</a>
+                <button id="themeToggle" class="theme-toggle"><span class="theme-icon">☀️</span></button>
+                <div class="auth-section">
+                    <div id="guestLinks" class="auth-section" style="display:none;">
+                        <a href="/login" class="nav-link auth-link">登录</a>
+                        <a href="/register" class="nav-link auth-link auth-register">注册</a>
+                    </div>
+                    <div id="userMenu" class="user-menu" style="display:none;">
+                        <div class="user-dropdown">
+                            <button class="user-dropdown-trigger">
+                                <span id="userDisplayName">用户</span>
+                                <span class="dropdown-arrow">▾</span>
+                            </button>
+                            <div class="dropdown-menu">
+                                <a href="/profile">我的文章</a>
+                                <a href="/admin" id="adminLink" style="display:none;">管理后台</a>
+                                <div class="dropdown-divider"></div>
+                                <a href="#" id="logoutBtn">退出登录</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="editor-main">
+        <div class="container editor-container">
+            <div class="editor-header">
+                <input type="text" class="editor-title-input" id="articleTitle"
+                       placeholder="输入文章标题..." maxlength="200" autofocus>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="editor-toolbar">
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" onclick="insertMd('**', '**')" title="加粗"><strong>B</strong></button>
+                    <button class="toolbar-btn" onclick="insertMd('*', '*')" title="斜体"><em>I</em></button>
+                    <button class="toolbar-btn" onclick="insertMd('~~', '~~')" title="删除线"><s>S</s></button>
+                </div>
+                <div class="toolbar-sep"></div>
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" onclick="insertMd('# ', '')" title="标题1">H1</button>
+                    <button class="toolbar-btn" onclick="insertMd('## ', '')" title="标题2">H2</button>
+                    <button class="toolbar-btn" onclick="insertMd('### ', '')" title="标题3">H3</button>
+                </div>
+                <div class="toolbar-sep"></div>
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" onclick="insertMd('\n> ', '')" title="引用">❝</button>
+                    <button class="toolbar-btn" onclick="insertMd('\n- ', '')" title="无序列表">•</button>
+                    <button class="toolbar-btn" onclick="insertMd('\n1. ', '')" title="有序列表">1.</button>
+                    <button class="toolbar-btn" onclick="insertMd('\n```\n', '\n```\n')" title="代码块">&lt;/&gt;</button>
+                    <button class="toolbar-btn" onclick="insertMd('![alt](', ')')" title="图片">🖼</button>
+                    <button class="toolbar-btn" onclick="insertMd('[', '](url)')" title="链接">🔗</button>
+                </div>
+                <div class="toolbar-sep"></div>
+                <select class="editor-category-select" id="articleCategory">
+                    <option value="">选择分类</option>
+                    <option value="技术突破">技术突破</option>
+                    <option value="产品发布">产品发布</option>
+                    <option value="行业趋势">行业趋势</option>
+                    <option value="政策监管">政策监管</option>
+                    <option value="学术论文">学术论文</option>
+                    <option value="AI教程">AI教程</option>
+                </select>
+            </div>
+
+            <!-- Editor Panes -->
+            <div class="editor-panes">
+                <div class="editor-pane">
+                    <div class="editor-pane-label">Markdown</div>
+                    <textarea class="editor-textarea" id="markdownEditor"
+                              placeholder="开始写作...&#10;&#10;支持 Markdown 语法：&#10;# 标题&#10;**加粗** *斜体*&#10;- 列表&#10;> 引用&#10;`代码`&#10;```&#10;代码块&#10;```">{% if content_md %}{{ content_md }}{% endif %}</textarea>
+                </div>
+                <div class="editor-pane">
+                    <div class="editor-pane-label">预览</div>
+                    <div class="editor-preview" id="previewPane">
+                        <div class="editor-empty-preview">在左侧开始写作，实时预览将显示在这里</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="editor-footer">
+                <div class="editor-footer-left">
+                    <span class="editor-status" id="editorStatus">就绪</span>
+                </div>
+                <div class="editor-footer-right">
+                    <span id="wordCount" class="editor-status">0 字</span>
+                    <button class="btn-save-draft" onclick="saveDraft()">💾 保存草稿</button>
+                    <button class="btn-publish" id="publishBtn" onclick="publishArticle()">📝 发布文章</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="toast" id="toast"></div>
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/editor.js"></script>
+</body>
+</html>

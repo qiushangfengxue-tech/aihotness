@@ -6,7 +6,14 @@ from pathlib import Path
 
 # Base paths
 BASE_DIR = Path(__file__).resolve().parent.parent
-DATA_DIR = BASE_DIR / "data"
+
+# Support Railway volume mount for persistent storage
+RAILWAY_VOLUME = os.getenv("RAILWAY_VOLUME_MOUNT_PATH", "")
+if RAILWAY_VOLUME:
+    DATA_DIR = Path(RAILWAY_VOLUME)
+else:
+    DATA_DIR = BASE_DIR / "data"
+
 DB_PATH = DATA_DIR / "aihotness.db"
 
 # Ensure directories exist
